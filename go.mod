@@ -1,4 +1,4 @@
-module github.com/ramsnarus/protos
+module github.com/ramsnarus/protos/v0.0.7
 
 go 1.21.1
 
