@@ -1,0 +1,323 @@
+syntax="proto3";
+import "google/protobuf/timestamp.proto";
+package auth;
+option go_package="/auth";
+
+service AuthSvc{
+   // in case of login, server checks credentials and returns token  
+   rpc Login(stream LoginRequest)returns(stream LoginResponse){}
+
+   //subscribtion to events
+   rpc Subscribe(stream SubscribeCommands)returns(stream Events){}
+
+   rpc Edit(stream EditCommand)returns(stream EditResponse){}
+
+   // returns all groups of user
+   rpc GetUserGroups(GetUserGroupsReq)returns(GetUserGroupsResp){}
+
+   // returns users of group
+   rpc GetUsersByGroup(GetUsersByGroupReq)returns(GetUsersByGroupResp){}
+
+   // returns online terminals
+   rpc GetOnlineTerminals(Empty)returns(Terminals){}
+}
+
+message Empty{
+
+}
+
+message Terminals{
+    repeated Terminal terminals=1;
+}
+
+message PaginationRequest{
+    uint64 items=1;         // maximum of items 
+    uint64 page=2;          // page index starting from 0
+    uint64 startfromID=3;   // including from id 
+}
+
+message PaginationResponse{
+    uint64 page=1;         //current page
+    uint64 pages=2;        //amount of pages
+}
+
+message GetUsersByGroupReq{
+    uint64 groupid=1;
+    PaginationRequest paginationreq=2;
+}
+
+message GetUsersByGroupResp{
+    repeated User users=1;
+    PaginationResponse paginationresp=2;
+}
+
+message GetUserGroupsReq{
+    PaginationRequest paginationreq=1;
+}
+
+message GetUserGroupsResp{
+    repeated UserGroup groups=1;
+    PaginationResponse paginationresp=2;
+}
+
+message EditCommand{
+    message GetUser{
+        uint64 id=1;
+    }
+    message GetUserGroup{
+        uint64 id=1;
+    }
+    message UpdateUser{
+        User user=1;
+    }
+    message UpdateUserGroup{
+        UserGroup group=1;
+    }
+    message DeleteUser{
+        uint64 id=1;
+    }
+    message DeleteUserGroup{
+        uint64 id=1;
+    }
+    message CreateUser{
+        User user=1;
+    }
+    message CreateUserGroup{
+        UserGroup group=1;
+    }
+    message GetTerminal{
+        uint64 id=1;
+    }
+    message UpdateTerminal{
+        Terminal terminal=1;
+    }
+    message DeleteTerminal{
+        uint64 id=1;
+    }
+    message GetTerminals{
+        PaginationRequest request=1;
+    }
+    message CreateTerminal{
+        Terminal terminal=1;
+    }
+    message Save{
+
+    }
+    message Cancel{
+
+    }
+    oneof cmd{
+        GetUser getuser=1;
+        GetUserGroup getusergroup=2;
+        UpdateUser updateuser=3;
+        UpdateUserGroup updateusergroup=4;
+        DeleteUser deleteuser=5;
+        DeleteUserGroup deleteusergroup=6;
+        CreateUser createuser=7;
+        CreateUserGroup createusergroup=8;
+        GetUserGroupsReq getUserGroups=9;
+        GetUsersByGroupReq getUsersByGroup=10;
+        GetTerminal getTerminal=11;
+        UpdateTerminal updateTerminal=12;
+        DeleteTerminal deleteTerminal=13;
+        GetTerminals getTerminals=14;
+        CreateTerminal createTerminal=15;
+        Save save=16;
+        Cancel cancel=17;
+    }
+}
+
+message EditResponse{
+    message TerminalsResp{
+     repeated Terminal terminals=1;
+     PaginationResponse paginationresp=2;
+    }
+    
+    message Error{
+        uint64 code=1;
+        string message=2;
+    }
+    message GetUser{
+        optional User user=1;
+        optional Error error=2;
+    }
+    message GetUserGroup{
+        optional UserGroup group=1;
+        optional Error error=2;
+    }
+    message UpdateUser{
+        optional User user=1;
+        optional Error error=2;
+    }
+    message UpdateUserGroup{
+        optional UserGroup group=1;
+        optional Error error=2;
+    }
+    message DeleteUser{
+        optional Error error=1;
+    }
+    message DeleteUserGroup{
+        optional Error error=1;
+    }
+    message CreateUser{
+        optional User user=1;
+        optional Error error=2;
+    }
+    message CreateUserGroup{
+        optional UserGroup group=1;
+        optional Error error=2;
+    }
+    message GetUserGroupsResponse{
+        optional GetUserGroupsResp resp=1;
+        optional Error error=2;
+    }
+    message GetUsersByGroupResponse{
+        optional GetUsersByGroupResp resp=1;
+        optional Error error=2;
+    }
+    message GetTerminal{
+        optional Terminal terminal=1;
+        optional Error error=2;
+    }
+    message UpdateTerminal{
+        optional Terminal terminal=1;
+        optional Error error=2;
+    }
+    message DeleteTerminal{
+        optional Error error=1;
+    }
+    message GetTerminals{
+        optional TerminalsResp terminals=1;
+        optional Error error=2;
+    }
+    message CreateTerminal{
+        optional Terminal terminal=1;
+        optional Error error=2;
+    }
+    oneof response{
+        GetUser getUserResponse=1;
+        GetUserGroup getUserGroupResponse=2;
+        UpdateUser updateUserResponse=3;
+        UpdateUserGroup updateUserGroupResponse=4;
+        DeleteUser deleteUserResponse=5;
+        DeleteUserGroup deleteUserGroupResponse=6;
+        CreateUser createUserResponse=7;
+        CreateUserGroup createUserGroupResponse=8;
+        GetUserGroupsResponse getUserGroupsResp=9;
+        GetUsersByGroupResponse getUsersByGroupResp=10;
+        GetTerminal getTerminalResponse=11;
+        UpdateTerminal updateTerminalResponse=12;
+        DeleteTerminal deleteTerminalResponse=13;
+        GetTerminals getTerminals=14;
+        CreateTerminal createTerminalResponse=15;
+    }
+}
+
+message SubscribeCommands{
+    message Subscribe{
+        //string subscriber=1; //like: 'sessionid.label_number'
+    }
+    message Unsubscribe{
+    }
+    oneof event{
+        Subscribe subscribe=1;
+        Unsubscribe unsubscribe=2;
+    }
+}
+
+enum EventType{
+    CreatedUser=0;
+    UpdatedUser=1;
+    DeletedUser=2;
+    LockedUser=3;
+    CreatedUserGroup=4;
+    UpdateUserGroup=5;
+    DeletedUserGroup=6;
+    LockedUserGroup=7;
+    CreatedTerminal=8;
+    UpdatedTerminal=9;
+    DeletedTerminal=10;
+    LockedTerminal=11;
+
+}
+
+
+message Events{
+     message Event{
+        EventType etype=1;      //type of event
+        repeated uint64 ids=2;  //id's of affected entities
+     }
+    string author=1;
+    repeated Event events=2;
+}
+
+message User{
+    uint64 id=1;
+    string login=2;
+    string pass=3;
+    uint64 groupid=4;
+    uint64 sessionid=5;
+}
+
+message Credentials{
+    string login=1;
+    string pass=2;
+    string terminalNumber=3;
+}
+
+message LoginRequest{
+
+    message Logout{}
+    oneof req{
+        Credentials credentials=1;
+        Logout  logout=2;
+    }
+}
+
+message LoginResponse{
+    oneof res{
+        Token token=1;
+        Error error=2; 
+    }
+}
+
+message Token{
+    bytes data=1;
+}
+
+message Error{
+    string message=1;
+}
+
+// message Tokenvalid{
+//     bool valid=1;
+// }
+
+message Terminal{
+    uint64 id=1;
+    string number=2;
+    string identificator=3;
+    string description=4;
+    uint64 sessionid=5;
+    string number_hash=6;
+}
+
+message UserGroup{
+    uint64 id=1;
+    string name=2;
+    string description=3;
+    bool super=4;
+    uint64 sessionid=5;
+}
+
+message Session{
+    uint64 id=1;
+    uint64 userid=2;
+    uint64 employeid=3;
+    uint64 terminalid=4;
+    uint64 branchid=5;
+    google.protobuf.Timestamp startat=6;
+    google.protobuf.Timestamp endat=7;
+    bool crash=8;
+    string version=9;
+}
